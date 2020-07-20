@@ -17,7 +17,7 @@
 
 # misc
 .DS_Store
-/data
+/public/data
 
 # debug
 npm-debug.log*
