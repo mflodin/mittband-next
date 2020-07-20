@@ -1,4 +1,91 @@
-import Head from 'next/head'
+import Head from "next/head";
+import { text } from "../data/text.json";
+
+function chordsToText(chords) {
+  let text = "";
+  let i = 0;
+  chords.forEach((chord) => {
+    for (; i < chord.offset; i++) {
+      text += " ";
+    }
+    text += chord.chord;
+  });
+  return text;
+}
+
+function renderSong(song) {
+  console.log({ song });
+  return song.sections.map((section) => {
+    return (
+      <section className={"song-section " + section.type.replace(/\s/g, "-")}>
+        [{section.type}]
+        {section.lines.map((line) => {
+          return (
+            <>
+              <div className="line">{chordsToText(line.chords)}</div>
+              <div className="line">{line.text}</div>
+            </>
+          );
+        })}
+        <div className="line"> </div>
+      </section>
+    );
+  });
+}
+
+function parseText(text) {
+  let song = { sections: [] };
+  let currentSection;
+  let rowType;
+  let line;
+
+  text.split("\n").forEach((row) => {
+    if (rowType === "chords") {
+      if (row.trim().length === 0) {
+        rowType = undefined;
+        return;
+      }
+
+      let chordSplit = row.split(" ");
+      let offset = 0;
+      let chords = [];
+      chordSplit.forEach((chord) => {
+        if (chord.length === 0) {
+          offset += 1;
+          return;
+        }
+
+        chords.push({ chord, offset });
+        // offset += chord.length;
+        offset += 1;
+      });
+      line = { chords };
+      currentSection.lines.push(line);
+      rowType = "text";
+      return;
+    }
+
+    if (rowType === "text") {
+      line.text = row || " ";
+      rowType = "chords";
+      return;
+    }
+
+    const sectionRegex = /\s*\[(.+)\]\s*/;
+    const match = row.match(sectionRegex);
+    if (match) {
+      currentSection = {
+        type: match[1].trim().toLowerCase(),
+        lines: [],
+      };
+      song.sections.push(currentSection);
+      rowType = "chords";
+    }
+    return <div className="row">{row}</div>;
+  });
+
+  return song;
+}
 
 export default function Home() {
   return (
@@ -9,57 +96,58 @@ export default function Home() {
       </Head>
 
       <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/zeit/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        {/* <article className="song">
+          <section className="verse">
+            <div className="row">
+              <span className="chord">Bm</span>Hello?
+            </div>
+            <div className="row">
+              Is there anybody <span className="chord">A</span>in there ?
+            </div>
+            <div className="row">
+              Just nod if you can <span className="chord">G</span>hear me{" "}
+              <span className="chord">G/F#</span>
+              {"       "}
+              <span className="chord">Em</span>
+            </div>
+            <div className="row">
+              Is there <span className="chord">Bm</span>anyone at home?
+            </div>
+          </section>
+        </article> */}
+        <article className="song a">{text}</article>
+        <article className="song b">{renderSong(parseText(text))}</article>
       </main>
 
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
-        </a>
-      </footer>
-
       <style jsx>{`
+        .a {
+          float: left;
+        }
+
+        .b {
+          float: right;
+        }
+
+        .song {
+          font-size: 16px;
+          font-family: monospace;
+          white-space: pre;
+        }
+
+        .song-section {
+          margin-bottom: 16px;
+        }
+
+        .row {
+          position: relative;
+          line-height: 2.5;
+        }
+
+        .chord {
+          position: absolute;
+          bottom: 1em;
+        }
+
         .container {
           min-height: 100vh;
           padding: 0 0.5rem;
@@ -70,12 +158,12 @@ export default function Home() {
         }
 
         main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
+          // padding: 5rem 0;
+          // flex: 1;
+          // display: flex;
+          // flex-direction: column;
+          // justify-content: center;
+          // align-items: center;
         }
 
         footer {
@@ -205,5 +293,5 @@ export default function Home() {
         }
       `}</style>
     </div>
-  )
+  );
 }
