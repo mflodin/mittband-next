@@ -1,3 +1,4 @@
+import "isomorphic-fetch";
 import Link from "next/link";
 
 export default function Songs({ songs = [] }) {
@@ -7,10 +8,10 @@ export default function Songs({ songs = [] }) {
       <ol>
         {songs.map((song) => {
           return (
-            <li>
+            <li key={song.id}>
               <Link href={`/songs/${song.id}`}>
                 <a>
-                  {song.name} - {song.artist}
+                  {song.title} - {song.artist}
                 </a>
               </Link>
             </li>

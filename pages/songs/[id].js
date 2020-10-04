@@ -14,26 +14,59 @@ function chordsToText(chords) {
   return text;
 }
 
-function renderSong({ song, showSectionNames, showChords }) {
-  // console.log({ song });
-  return song.sections.map((section) => {
-    return (
-      <section className={"song-section " + section.type.replace(/\s/g, "-")}>
-        {showSectionNames ? `[${section.type}]` : null}
-        {section.lines.map((line) => {
-          return (
-            <>
-              {showChords ? (
-                <div className="line">{chordsToText(line.chords)}</div>
-              ) : null}
-              <div className="line">{line.text}</div>
-            </>
-          );
-        })}
-        <div className="line"> </div>
-      </section>
-    );
-  });
+function Song({ song, showSectionNames, showChords }) {
+  return (
+    <article className="song b">
+      {song.sections.map((section, i) => {
+        return (
+          <section
+            key={i}
+            className={"song-section " + section.type.replace(/\s/g, "-")}
+          >
+            {showSectionNames ? `[${section.type}]` : null}
+            {section.lines.map((line, j) => {
+              return (
+                <React.Fragment key={j}>
+                  {showChords ? (
+                    <div className="chords line">
+                      {chordsToText(line.chords)}
+                    </div>
+                  ) : null}
+                  {showChords || line.text !== " " ? (
+                    <div className="lyrics line">{line.text}</div>
+                  ) : null}
+                </React.Fragment>
+              );
+            })}
+          </section>
+        );
+      })}
+
+      <style jsx>{`
+        label + label {
+          margin-left: 10px;
+        }
+
+        .song {
+          font-size: 16px;
+          font-family: monospace;
+          white-space: pre;
+        }
+
+        .song-section {
+          margin-bottom: 32px;
+        }
+
+        .line {
+        }
+
+        .chords {
+          margin-top: 5px;
+          color: #666;
+        }
+      `}</style>
+    </article>
+  );
 }
 
 function parseText(text) {
@@ -90,9 +123,10 @@ function parseText(text) {
   return song;
 }
 
-export default function Song({ text, title, artist }) {
+export default function SongPage({ text, title, artist }) {
   const [showSectionNames, setShowSectionNames] = useState(false);
   const [showChords, setShowChords] = useState(true);
+
   return (
     <div className="container">
       <Head>
@@ -123,32 +157,14 @@ export default function Song({ text, title, artist }) {
       </aside>
 
       <main>
-        <h1>
+        <h1 className="title">
           {title} - {artist}
         </h1>
-        {/* <article className="song">
-          <section className="verse">
-            <div className="row">
-              <span className="chord">Bm</span>Hello?
-            </div>
-            <div className="row">
-              Is there anybody <span className="chord">A</span>in there ?
-            </div>
-            <div className="row">
-              Just nod if you can <span className="chord">G</span>hear me{" "}
-              <span className="chord">G/F#</span>
-              {"       "}
-              <span className="chord">Em</span>
-            </div>
-            <div className="row">
-              Is there <span className="chord">Bm</span>anyone at home?
-            </div>
-          </section>
-        </article> */}
-        {/* <article className="song a">{text}</article> */}
-        <article className="song b">
-          {renderSong({ song: parseText(text), showChords, showSectionNames })}
-        </article>
+        <Song
+          song={parseText(text)}
+          showChords={showChords}
+          showSectionNames={showSectionNames}
+        />
       </main>
 
       <style jsx>{`
@@ -156,24 +172,8 @@ export default function Song({ text, title, artist }) {
           margin-left: 10px;
         }
 
-        .song {
-          font-size: 16px;
-          font-family: monospace;
-          white-space: pre;
-        }
-
-        .song-section {
-          margin-bottom: 16px;
-        }
-
-        .row {
-          position: relative;
-          line-height: 2.5;
-        }
-
-        .chord {
-          position: absolute;
-          bottom: 1em;
+        .title {
+          font-family: Helvetica, Arial, sans-serif;
         }
 
         .container {
@@ -216,7 +216,6 @@ export async function getServerSideProps({ params }) {
     await fetch(`${process.env.ORIGIN}/data/songs.json`)
   ).json();
 
-  console.log(songs, params.id);
   const { title, artist } = songs.find((s) => s.id === params.id) ?? {};
 
   // Pass data to the page via props
